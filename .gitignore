@@ -1,4 +1,5 @@
-# Donnees sources (a telecharger depuis Kaggle, non versionnees)
+# Donnees sources : les CSV Olist sont versionnes pour que le pipeline soit
+# reproductible sans compte Kaggle. Seules les archives sont exclues.
 data/raw/*.zip
 
 # Secrets
