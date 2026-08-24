@@ -1,0 +1,116 @@
+# ---------------------------------------------------------------------------
+# Projet 2 - M1 MBDA : pipeline analytics Olist
+# Infrastructure complete : entrepot PostgreSQL + transformation dbt + BI Metabase
+# ---------------------------------------------------------------------------
+services:
+
+  # --- Entrepot de donnees ---------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: olist_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dwh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwh}
+      POSTGRES_DB: ${POSTGRES_DB:-olist_dw}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dwh} -d ${POSTGRES_DB:-olist_dw}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # --- Couche d'ingestion (Extract / Load) : CSV -> schema raw ---------------
+  ingestion:
+    build:
+      context: .
+      dockerfile: docker/ingestion.Dockerfile
+    container_name: olist_ingestion
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-dwh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwh}
+      POSTGRES_DB: ${POSTGRES_DB:-olist_dw}
+    volumes:
+      - ./ingestion:/app/ingestion
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ["tools"]
+
+  # --- Couche de transformation (Transform) : dbt -----------------------------
+  dbt:
+    build:
+      context: .
+      dockerfile: docker/dbt.Dockerfile
+    container_name: olist_dbt
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-dwh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwh}
+      POSTGRES_DB: ${POSTGRES_DB:-olist_dw}
+      DBT_PROFILES_DIR: /usr/app
+    volumes:
+      - ./dbt:/usr/app
+    ports:
+      - "8080:8080"   # dbt docs serve
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: ["tools"]
+
+  # --- Compilation du rapport PDF ---------------------------------------------
+  report:
+    build:
+      context: .
+      dockerfile: docker/report.Dockerfile
+    container_name: olist_report
+    volumes:
+      - ./docs:/work/docs
+    profiles: ["tools"]
+
+  # --- Couche de restitution : tableau de bord Streamlit ---------------------
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/dashboard.Dockerfile
+    container_name: olist_dashboard
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-dwh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwh}
+      POSTGRES_DB: ${POSTGRES_DB:-olist_dw}
+    volumes:
+      - ./dashboard:/app/dashboard
+    ports:
+      - "8501:8501"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # --- Exploration ad hoc (optionnel) -----------------------------------------
+  metabase:
+    image: metabase/metabase:latest
+    container_name: olist_metabase
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER:-dwh}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-dwh}
+      MB_DB_HOST: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -1,0 +1,114 @@
+version: 2
+
+models:
+
+  - name: fct_order_item
+    description: >
+      Fait principal. GRAIN : 1 ligne = 1 article une commande.
+      Toute rupture unicite sur (order_id, order_item_id) fausse le CA.
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_id, order_item_id]
+    columns:
+      - name: order_item_key
+        tests: [unique, not_null]
+      - name: order_date_key
+        description: "Integrite referentielle vers la dimension temps."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: customer_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+      - name: product_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+      - name: seller_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_seller')
+                field: seller_key
+      - name: status_key
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_order_status')
+                field: status_key
+      - name: montant_produit
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: montant_total
+        tests: [not_null]
+      - name: delai_livraison_jours
+        description: "NULL si la commande n a jamais ete livree (~3 % des lignes)."
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 250
+                inclusive: true
+              config:
+                where: "delai_livraison_jours is not null"
+
+  - name: fct_order_payment
+    description: "Fait paiements. GRAIN : (order_id, payment_sequential)."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [order_id, payment_sequential]
+    columns:
+      - name: payment_key
+        tests: [unique, not_null]
+      - name: customer_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+      - name: montant_paye
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+
+  - name: fct_order_review
+    description: "Fait satisfaction. GRAIN : 1 ligne = 1 avis (1 commande notee)."
+    columns:
+      - name: review_key
+        tests: [unique, not_null]
+      - name: order_id
+        tests: [unique, not_null]
+      - name: note
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [1, 2, 3, 4, 5]
+                quote: false
+      - name: customer_key
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key

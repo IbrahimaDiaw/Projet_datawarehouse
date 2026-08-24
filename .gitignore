@@ -1,0 +1,20 @@
+# Donnees sources (a telecharger depuis Kaggle, non versionnees)
+data/raw/*.zip
+
+# Secrets
+.env
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Systeme
+.DS_Store
+Thumbs.db

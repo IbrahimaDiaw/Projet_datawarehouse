@@ -1,0 +1,16 @@
+version: 2
+
+seeds:
+  - name: br_states
+    description: >
+      Referentiel des 27 unites federatives du Bresil et de leurs 5 grandes
+      regions. Permet de creer une hierarchie geographique
+      Region > Etat > Ville dans les dimensions client et vendeur.
+    columns:
+      - name: state_code
+        tests: [unique, not_null]
+      - name: region
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul']

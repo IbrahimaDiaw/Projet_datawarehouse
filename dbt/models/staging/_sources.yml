@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Copie fidele des 9 fichiers CSV du dataset Olist, toutes colonnes en TEXT.
+      Chargee par ingestion/load_raw.py. Aucune transformation a ce niveau.
+    schema: raw
+    tables:
+      - name: orders
+        description: "Une ligne par commande (99 441)."
+      - name: order_items
+        description: "Une ligne par article d'une commande (112 650). Grain du fait principal."
+      - name: customers
+        description: >
+          ATTENTION : customer_id est une cle par COMMANDE, pas par client.
+          Le veritable identifiant client est customer_unique_id.
+      - name: products
+        description: "Catalogue produits (32 951)."
+      - name: sellers
+        description: "Vendeurs de la marketplace (3 095)."
+      - name: order_payments
+        description: "Une ligne par moyen de paiement utilise sur une commande."
+      - name: order_reviews
+        description: "Avis clients (note 1 a 5)."
+      - name: geolocation
+        description: >
+          Coordonnees par prefixe de code postal, avec de NOMBREUX doublons :
+          doit imperativement etre deduplique avant toute jointure.
+      - name: product_category_translation
+        description: "Traduction portugais -> anglais des 71 categories."

@@ -1,0 +1,112 @@
+// ---------------------------------------------------------------------------
+// Modele dimensionnel - constellation de faits
+// A coller sur https://dbdiagram.io pour generer le diagramme du rapport.
+// ---------------------------------------------------------------------------
+
+Table dim_date {
+  date_key int [pk, note: "AAAAMMJJ"]
+  date_day date
+  annee int
+  trimestre int
+  mois int
+  nom_mois varchar
+  semaine_iso int
+  annee_mois varchar
+  is_weekend boolean
+  is_periode_analyse boolean
+}
+
+Table dim_customer {
+  customer_key varchar [pk]
+  customer_unique_id varchar [unique, note: "vrai identifiant client"]
+  ville varchar
+  etat varchar
+  region varchar
+  latitude numeric
+  longitude numeric
+  nb_commandes int
+  is_client_recurrent boolean
+  segment_fidelite varchar
+}
+
+Table dim_product {
+  product_key varchar [pk]
+  product_id varchar [unique]
+  categorie varchar
+  categorie_pt varchar
+  segment varchar
+  poids_g numeric
+  volume_cm3 numeric
+  tranche_poids varchar
+}
+
+Table dim_seller {
+  seller_key varchar [pk]
+  seller_id varchar [unique]
+  ville varchar
+  etat varchar
+  region varchar
+}
+
+Table dim_order_status {
+  status_key varchar [pk]
+  statut_code varchar [unique]
+  statut varchar
+  is_livree boolean
+  is_annulee boolean
+  is_chiffre_affaires boolean
+  famille_statut varchar
+}
+
+Table fct_order_item {
+  order_item_key varchar [pk]
+  order_id varchar [note: "dimension degeneree"]
+  order_item_id int
+  order_date_key int [ref: > dim_date.date_key]
+  delivered_date_key int [ref: > dim_date.date_key]
+  customer_key varchar [ref: > dim_customer.customer_key]
+  product_key varchar [ref: > dim_product.product_key]
+  seller_key varchar [ref: > dim_seller.seller_key]
+  status_key varchar [ref: > dim_order_status.status_key]
+  montant_produit numeric [note: "additive"]
+  frais_port numeric [note: "additive"]
+  montant_total numeric [note: "additive"]
+  quantite int
+  delai_livraison_jours numeric [note: "non additive"]
+  ecart_promesse_jours numeric [note: "non additive"]
+  is_retard int
+  tranche_retard varchar
+
+  Note: "GRAIN : 1 ligne = 1 article une commande"
+}
+
+Table fct_order_payment {
+  payment_key varchar [pk]
+  order_id varchar
+  payment_sequential int
+  order_date_key int [ref: > dim_date.date_key]
+  customer_key varchar [ref: > dim_customer.customer_key]
+  status_key varchar [ref: > dim_order_status.status_key]
+  type_paiement varchar
+  montant_paye numeric
+  nb_echeances int
+  tranche_echeances varchar
+
+  Note: "GRAIN : 1 ligne = 1 moyen de paiement une commande"
+}
+
+Table fct_order_review {
+  review_key varchar [pk]
+  review_id varchar
+  order_id varchar [unique]
+  order_date_key int [ref: > dim_date.date_key]
+  review_date_key int [ref: > dim_date.date_key]
+  customer_key varchar [ref: > dim_customer.customer_key]
+  status_key varchar [ref: > dim_order_status.status_key]
+  note int
+  is_satisfait boolean
+  delai_livraison_jours numeric
+  tranche_retard varchar
+
+  Note: "GRAIN : 1 ligne = 1 avis (1 commande notee)"
+}

@@ -1,0 +1,64 @@
+version: 2
+
+models:
+
+  - name: dim_date
+    description: "Dimension temps generee, 2016-01-01 a 2018-12-31. Cle AAAAMMJJ."
+    columns:
+      - name: date_key
+        tests: [unique, not_null]
+      - name: date_day
+        tests: [unique, not_null]
+      - name: annee
+        tests:
+          - accepted_values:
+              arguments:
+                values: [2016, 2017, 2018]
+                quote: false
+
+  - name: dim_customer
+    description: >
+      Dimension client (SCD type 1). Construite sur customer_unique_id :
+      un client = une ligne, quel que soit son nombre de commandes.
+    columns:
+      - name: customer_key
+        tests: [unique, not_null]
+      - name: customer_unique_id
+        tests: [unique, not_null]
+      - name: region
+        tests: [not_null]
+      - name: nb_commandes
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 1
+                inclusive: true
+
+  - name: dim_product
+    description: "Dimension produit denormalisee (etoile)."
+    columns:
+      - name: product_key
+        tests: [unique, not_null]
+      - name: product_id
+        tests: [unique, not_null]
+      - name: categorie
+        tests: [not_null]
+      - name: segment
+        tests: [not_null]
+
+  - name: dim_seller
+    columns:
+      - name: seller_key
+        tests: [unique, not_null]
+      - name: seller_id
+        tests: [unique, not_null]
+      - name: region
+        tests: [not_null]
+
+  - name: dim_order_status
+    description: "Junk dimension : statut de commande et drapeaux associes."
+    columns:
+      - name: status_key
+        tests: [unique, not_null]
+      - name: statut_code
+        tests: [unique, not_null]
