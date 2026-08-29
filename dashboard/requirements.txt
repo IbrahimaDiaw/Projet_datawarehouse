@@ -3,3 +3,4 @@ pandas==2.2.2
 plotly==5.24.0
 SQLAlchemy==2.0.31
 psycopg2-binary==2.9.9
+kaleido==0.2.1

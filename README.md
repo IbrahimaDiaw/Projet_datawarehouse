@@ -112,11 +112,15 @@ connecter ensuite la base — hôte `postgres`, port `5432`, base `olist_dw`, sc
 `marts` uniquement. Le dashboard livrable reste celui de Streamlit, car il est
 versionné dans le dépôt alors qu'un tableau Metabase vit dans sa base interne.
 
-### Compilation du rapport PDF
+### Compilation du rapport
 ```bash
-docker compose --profile tools run --rm report
+docker compose --profile tools run --rm figures   # regénère les 5 graphiques
+docker compose --profile tools run --rm report    # -> docs/rapport.pdf
+docker compose --profile tools run --rm word      # -> docs/rapport.docx
 ```
-Regénère `docs/rapport.pdf` (16 pages) depuis `docs/rapport.md` et `docs/rapport.css`.
+Les deux formats sont produits depuis la même source `docs/rapport.md`, ils ne
+peuvent donc pas diverger. Dans Word, mettre le sommaire à jour (clic droit sur
+le sommaire → *Mettre à jour les champs*) pour peupler les entrées.
 
 ### Documentation et lignage
 ```bash
@@ -174,6 +178,6 @@ projet-dw-olist/
 ## 7. Livrables
 
 - [x] Code source (ce dépôt)
-- [x] Rapport PDF ([docs/rapport.pdf](docs/rapport.pdf)) — source Markdown versionnée, à personnaliser (nom, URL du dépôt, captures)
+- [x] Rapport ([PDF](docs/rapport.pdf) et [Word](docs/rapport.docx)) — source Markdown versionnée, à personnaliser (nom, URL du dépôt, captures du dashboard)
 - [x] Tableau de bord interactif (`dashboard/app.py`)
 - [ ] Captures du dashboard pour le rapport
