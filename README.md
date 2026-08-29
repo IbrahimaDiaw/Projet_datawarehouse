@@ -178,6 +178,4 @@ projet-dw-olist/
 ## 7. Livrables
 
 - [x] Code source (ce dépôt)
-- [x] Rapport ([PDF](docs/rapport.pdf) et [Word](docs/rapport.docx)) — source Markdown versionnée, à personnaliser (nom, URL du dépôt, captures du dashboard)
 - [x] Tableau de bord interactif (`dashboard/app.py`)
-- [ ] Captures du dashboard pour le rapport
